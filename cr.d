@@ -11,8 +11,24 @@
 //  ---------------------------------------------------
 
 import std.stdio;
+import std.path;
+import std.process : environment;
 
-const CRYPTIC_VERSION = "1.0.0";
+
+// Use this declaration rather than `enum`
+// so that we can assign it in runtime
+static string CRYPTIC_RESOLVER_HOME;
+
+
+enum CRYPTIC_RESOLVER_SHEETS = [
+	"computer": "https://github.com/cryptic-resolver/cryptic_computer.git",
+	"common":   "https://github.com/cryptic-resolver/cryptic_common.git",
+	"science":  "https://github.com/cryptic-resolver/cryptic_science.git",
+	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
+	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
+];
+
+enum CRYPTIC_VERSION = "1.0.0";
 
 
 void add_default_sheet_if_none_exist()
@@ -51,6 +67,16 @@ usage:
 
 void main(string[] args)
 {
+
+	version(Windows) {
+		CRYPTIC_RESOLVER_HOME = `C:\Users\` ~ environment["USERNAME"] ~ `\.cryptic-resolver`;
+	} else {
+		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
+	}	
+	
+	// DEBUG
+	// writeln(CRYPTIC_RESOLVER_HOME);
+
 	string arg;
 	int arg_num = args.length;
 
