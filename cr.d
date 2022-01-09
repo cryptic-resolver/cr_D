@@ -12,6 +12,7 @@
 
 import std.stdio;
 import std.path;
+import std.format;
 import std.process : environment;
 
 
@@ -29,6 +30,29 @@ enum CRYPTIC_RESOLVER_SHEETS = [
 ];
 
 enum CRYPTIC_VERSION = "1.0.0";
+
+
+//
+// helper: for color
+//
+
+string bold(string str)       { return "\033[1m%s\033[0m".format(str); }
+string underline(string str)  { return "\033[4m%s\033[0m".format(str); }
+string red(string str)        { return "\033[31m%s\033[0m".format(str); }
+string green(string str)      { return "\033[32m%s\033[0m".format(str); }
+string yellow(string str)     { return "\033[33m%s\033[0m".format(str); }
+string blue(string str)       { return "\033[34m%s\033[0m".format(str); }
+string purple(string str)     { return format("\033[35m%s\033[0m", str); }
+string cyan(string str)       { return format("\033[36m%s\033[0m", str); }
+
+
+// dmd -unittest ./cr.d
+unittest {
+	// assert(1==3);
+	writeln(bold("bold"));
+	writeln(red("red"));
+	writeln(purple("purple"));
+}
 
 
 void add_default_sheet_if_none_exist()
