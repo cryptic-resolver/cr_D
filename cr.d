@@ -52,28 +52,33 @@ usage:
 void main(string[] args)
 {
 	string arg;
-	int arg_num = len(args.length);
+	int arg_num = args.length;
+
+	// DEBUG
+	// writefln("arg_num is %d\n",arg_num);
 
 	if(arg_num < 2) {
-		arg = ""
+		arg = "";
 	} else {
-		arg = args[1]
+		arg = args[1];
 	}
 
 	switch (arg) {
 	case "":
-		help()
-		add_default_sheet_if_none_exist()
+		help();
+		add_default_sheet_if_none_exist();
+		break;
 	case "-h":
-		help()
+		help();
+		break;
 	case "-u":
 		if (arg_num > 2) {
-			update_sheets(args[2])
+			update_sheets(args[2]);
 		} else {
-			update_sheets("")
+			update_sheets("");
 		}
-
+		break;
 	default:
-		solve_word(arg)
+		solve_word(arg);
 	}
 }
