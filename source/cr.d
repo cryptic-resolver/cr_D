@@ -392,10 +392,72 @@ bool lookup(string sheet, string file, string word) {
 }
 
 
+//  The main logic of `cr`
+//    1. Search the default's first sheet first
+//    2. Search the rest sheets in the cryptic sheets default dir
+//
+//  The `search` procedure is done via the `lookup` function. It
+//  will print the info while finding. If `lookup` always return
+//  false then means lacking of this word in our sheets. So a wel-
+//  comed contribution is prinetd on the screen.
+void solve_word(string word_2_solve){
 
-void solve_word(string word_2_solve)
-{
-    writeln("TODO: solve word");
+	add_default_sheet_if_none_exist();
+
+	string word = toLower(word_2_solve);
+	// The index is the toml file we'll look into
+	import std.conv;
+	string index = to!string(word[0]);
+
+	import std.regex;
+	if(matchFirst(index, `\d`)) {
+		index = "0123456789";
+	}
+
+	// Default's first should be 1st to consider
+	string first_sheet = "cryptic_computer";
+
+	// cache lookup results
+	// bool slice
+	bool[] results;
+	results ~= lookup(first_sheet, index, word);
+	// return if result == true # We should consider all sheets
+
+	// Then else
+	import std.file;
+	auto rest = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
+	foreach(file; rest){
+		string sheet = file.baseName;
+		if(sheet != first_sheet) {
+			results ~= lookup(sheet, index, word);
+			// continue if result == false # We should consider all sheets
+		}
+	}
+
+
+	bool result_flag;
+	foreach(k,v; results) {
+		if(v == true) {
+			result_flag = true;
+		}
+	}
+
+	if(result_flag != true) {
+		writeln("cr: Not found anything.\n\n" ~
+			"You may use `cr -u` to update the sheets.\n" ~
+			"Or you could contribute to our sheets: Thanks!");
+
+		writefln("    1. computer:  %s", CRYPTIC_DEFAULT_SHEETS["computer"]);
+		writefln("    2. common:    %s", CRYPTIC_DEFAULT_SHEETS["common"]);
+		writefln("    3. science:	%s", CRYPTIC_DEFAULT_SHEETS["science"]);
+		writefln("    4. economy:   %s", CRYPTIC_DEFAULT_SHEETS["economy"]);
+		writefln("    5. medicine:  %s", CRYPTIC_DEFAULT_SHEETS["medicine"]);
+		writeln();
+
+	} else {
+		return;
+	}
+
 }
 
 
