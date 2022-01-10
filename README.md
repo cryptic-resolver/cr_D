@@ -179,7 +179,8 @@ This is built in D v2.098
 maybe you need `sudo` access
 - `dub init`
 - `dub add toml` to add dependency
-- `dub` to install all dependecies
+- `dub` to install all dependecies and build then run
+- `dub -- emacs` to test with arguments
 - `rdmd source/cr.d`
 - `./unittest.ps1`  
 

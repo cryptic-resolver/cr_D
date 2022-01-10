@@ -182,11 +182,11 @@ void pp_info(TOMLValue* infodoc ){
 		disp = red("No name!");
 	}
 
-	writefln("\n  %s: %s\n", disp, info["desc"].str);
+	writef("\n  %s: %s\n", disp, info["desc"].str);
 
 	auto p = "full" in info;
 	if (p !is null ){
-		format("\n  %s\n", info["full"].str);
+		writef("\n  %s\n", info["full"].str);
 	}
 
 	// see is string[]
@@ -486,20 +486,6 @@ void main(string[] args)
 		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
 	}	
 	
-	// TOMLDocument doc;
-	// bool status = load_dictionary("cryptic_computer","e",&doc);
-	// if (status) {
-	// 	writeln("OK");
-	// 	// writeln(doc);
-	// }
-	// else
-	// 	writeln("Failed");
-	
-	// auto emacs = doc["emacs"];
-
-	// pp_info(&emacs);
-
-	writeln(lookup("cryptic_computer","j","jpg"));
 
 	string arg;
 	int arg_num = cast(int)args.length;	// ulong to int
