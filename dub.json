@@ -8,5 +8,7 @@
 	},
 	"description": "A minimal D application.",
 	"license": "MIT",
-	"name": "cryptic-resolver"
+	"name": "cryptic-resolver",
+	"targetType": "executable",
+	"targetName": "cr"
 }

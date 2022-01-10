@@ -14,6 +14,7 @@ import std.stdio;
 import std.path;
 import std.format;
 import std.process;
+import std.array;
 
 import toml;
 
@@ -143,8 +144,41 @@ bool load_dictionary(string path, string file, TOMLDocument* doc) {
 
 
 // Pretty print the info of the given word
-void pp_info(string info){
+void pp_info(TOMLValue* infodoc ){
+	auto info = *infodoc;
+	// We should convert disp, desc, full into string
 
+	// can't directly cast TOMLValue to string
+	string disp = info["disp"].str;
+	
+	if (disp == "") {
+		disp = red("No name!");
+	}
+
+	writefln("\n  %s: %s\n", disp, info["desc"].str);
+
+	string full = info["full"].str ;
+
+	if (full != "") {
+		format("\n  %s\n", full);
+	}
+
+	// see is string[]
+	auto see = info["see"].array; 
+	// writeln(see.type); // ARRAY
+	
+
+	writeln(see);
+	if (see.length != 0 ) {
+		writef("\n%s ", purple("SEE ALSO "));
+
+		foreach(index, val ; see) {
+			write(underline(val.str) );
+		}
+
+		writeln();
+	}
+	writeln();
 }
 
 
@@ -185,6 +219,25 @@ void main(string[] args)
 		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
 	}	
 	
+	TOMLDocument doc;
+	bool status = load_dictionary("cryptic_computer","e",&doc);
+	if (status) {
+		writeln("OK");
+		// writeln(doc);
+	}
+	else
+		writeln("Failed");
+	
+	auto emacs = doc["emacs"];
+
+	// string haha = format("%s",emacs["desc"]);
+	// writeln(haha);
+
+	pp_info(&emacs);
+	// writeln(emacs);
+	// writeln(emacs);
+
+
 
 	string arg;
 	int arg_num = cast(int)args.length;	// ulong to int
