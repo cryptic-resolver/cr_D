@@ -178,10 +178,7 @@ This is built in D v2.098
 
 maybe you need `sudo` access
 
-- `go mod init github.com/Cryptic-Resolver/cr_Go` to add `go.mod`
-- `go get -u github.com/BurntSushi/toml` to add dependency in `go.mod` and generates `go.sum`
-- `go run ./cr.go`
-- `./build.ps1`
+- `rdmd cr`
 - `./test-scoop.ps1`  
 
 

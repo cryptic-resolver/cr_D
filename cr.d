@@ -13,7 +13,7 @@
 import std.stdio;
 import std.path;
 import std.format;
-import std.process : environment;
+import std.process;
 
 
 // Use this declaration rather than `enum`
@@ -21,7 +21,7 @@ import std.process : environment;
 static string CRYPTIC_RESOLVER_HOME;
 
 
-enum CRYPTIC_RESOLVER_SHEETS = [
+enum CRYPTIC_DEFAULT_SHEETS = [
 	"computer": "https://github.com/cryptic-resolver/cryptic_computer.git",
 	"common":   "https://github.com/cryptic-resolver/cryptic_common.git",
 	"science":  "https://github.com/cryptic-resolver/cryptic_science.git",
@@ -55,15 +55,74 @@ unittest {
 }
 
 
-void add_default_sheet_if_none_exist()
-{
-    writeln("TODO: add default sheet");
+//
+// core: logic
+//
+
+bool is_there_any_sheet() {
+
+	// import just be valid in this function scope
+	import std.file;
+	import std.array;
+
+	string path = CRYPTIC_RESOLVER_HOME;
+
+	if (! exists(path)) {
+		mkdir(path);
+	}
+
+	// .array property must use import std.array
+	auto dirnum = dirEntries(path, SpanMode.shallow).array.length ;
+
+	// writeln(dirnum); // DEBUG 
+	if (dirnum == 0)
+		return false;
+	else 
+		return true;
+	
+}
+
+unittest {
+	assert(is_there_any_sheet()==true);
+}
+
+
+void add_default_sheet_if_none_exist() {
+
+    if (!is_there_any_sheet()) {
+		writeln("cr: Adding default sheets...");
+
+		foreach(key, value; CRYPTIC_DEFAULT_SHEETS) {
+			writeln("cr: Pulling cryptic_" ~ key ~ "...");
+			auto gitcl = executeShell(
+				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ value ~ " -q");
+			if (gitcl.status != 0) writeln(gitcl.output);
+		}
+
+		writeln("cr: Add done");
+	}
+}
+
+unittest {
+	add_default_sheet_if_none_exist();
 }
 
 
 void update_sheets(string sheet_repo)
 {
     writeln("TODO: update sheets");
+}
+
+
+// Pretty print the info of the given word
+void pp_info(string info){
+
+}
+
+
+// Print default cryptic_ sheets
+void pp_sheet(string sheet) {
+	writeln(green("From: " ~ sheet));
 }
 
 
@@ -98,8 +157,7 @@ void main(string[] args)
 		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
 	}	
 	
-	// DEBUG
-	// writeln(CRYPTIC_RESOLVER_HOME);
+	writeln(is_there_any_sheet());
 
 	string arg;
 	int arg_num = args.length;
