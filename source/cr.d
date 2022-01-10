@@ -15,6 +15,7 @@ import std.path;
 import std.format;
 import std.process;
 import std.array;
+import std.string;
 
 import toml;
 
@@ -183,19 +184,16 @@ void pp_info(TOMLValue* infodoc ){
 
 	writefln("\n  %s: %s\n", disp, info["desc"].str);
 
-	string full = info["full"].str ;
-
-	if (full != "") {
-		format("\n  %s\n", full);
+	auto p = "full" in info;
+	if (p !is null ){
+		format("\n  %s\n", info["full"].str);
 	}
 
 	// see is string[]
-	auto see = info["see"].array; 
-	// writeln(see.type); // ARRAY
-	
+	p = "see" in info;
+	if (p !is null ){
+		auto see = info["see"].array;
 
-	writeln(see);
-	if (see.length != 0 ) {
 		writef("\n%s ", purple("SEE ALSO "));
 
 		foreach(index, val ; see) {
@@ -229,12 +227,11 @@ void pp_sheet(string sheet) {
 //    same = "XDG.Download" # this is right
 bool directly_lookup(string sheet, string file, string word) {
 
-	import std.ascii : toLower;	
 	import core.stdc.stdlib : exit;
 
 	TOMLDocument dict;
 
-	bool dict_status = load_dictionary(sheet, ""~toLower(file[0]), &dict);
+	bool dict_status = load_dictionary(sheet, toLower(file), &dict); // std.string: toLower
 
 	if(dict_status == false) {
 		writeln("WARN: Synonym jumps to a wrong place");
@@ -259,10 +256,10 @@ bool directly_lookup(string sheet, string file, string word) {
 	// Warn user this is the toml maintainer's fault
 	// the info map is empty
 	if (info == null) {
-		string str = "WARN: Synonym jumps to a wrong place at `%s` \n" ~
-			"Please consider fixing this in `%s.toml` of the sheet `%s`";
+		string str = "WARN: Synonym jumps to a wrong place at `%s` \n 
+	Please consider fixing this in `%s.toml` of the sheet `%s`";
 
-		string redstr = red(format(str, word, ""~toLower(file[0]), sheet));
+		string redstr = red(format(str, word, toLower(file), sheet));
 
 		writeln(redstr);
 		exit(0);
@@ -272,6 +269,127 @@ bool directly_lookup(string sheet, string file, string word) {
 	return true; // always true
 }
 
+
+
+//  Lookup the given word in a dictionary (a toml file in a sheet) and also print.
+//  The core idea is that:
+//
+//  1. if the word is `same` with another synonym, it will directly jump to
+//    a word in this sheet, but maybe a different dictionary
+//
+//  2. load the toml file and check whether it has the only one meaning.
+//    2.1 If yes, then just print it using `pp_info`
+//    2.2 If not, then collect all the meanings of the word, and use `pp_info`
+//
+bool lookup(string sheet, string file, string word) {
+
+	// Only one meaning
+
+	import core.stdc.stdlib : exit;
+
+	TOMLDocument dict;
+
+	bool dict_status = load_dictionary(sheet, file, &dict);
+
+	if (dict_status == false) {
+		return false;
+	}
+
+	//  We firstly want keys in toml be case-insenstive, but later in 2021/10/26 I found it caused problems.
+	// So I decide to add a new must-have format member: `disp`
+	// This will display the word in its traditional form.
+	// Then, all the keywords can be downcase.
+
+	TOMLValue info;
+
+	// check whether the key is in aa
+	auto p = (word in dict);
+	if (p is null){
+		return false;
+	} else {
+		info = dict[word]; // Directly hash it
+	}
+
+	// Warn user if the info is empty. For example:
+	//   emacs = { }
+	if (info.table.keys.length == 0) {
+		string str = format("WARN: Lack of everything of the given word. \n
+	Please consider fixing this in the sheet `%s`", sheet);
+		writeln(red(str));
+		exit(0);
+	}
+
+	// Check whether it's a synonym for anther word
+	// If yes, we should lookup into this sheet again, but maybe with a different file
+	
+	// writeln(info.table); //DEBUG
+
+	string same;
+	p = ("same" in info);
+	if(p !is null){
+		same = info["same"].str;
+		pp_sheet(sheet);
+		// point out to user, this is a jump
+		writeln(blue(bold(word)) ~ " redirects to " ~ blue(bold(same)));
+
+		// no need to load dictionary again
+		if (toLower(word[0]) == file[0]) {	// file is just "a" "b" "c" "d" "e"
+			// Explicitly convert it to downcase.
+			// In case the dictionary maintainer redirects to an uppercase word by mistake.
+			same = toLower(same);
+			TOMLValue same_info = dict[same];
+			if (same_info == null) { // Need repair
+				string str = "WARN: Synonym jumps to the wrong place at `" ~ same ~ "`\n" ~
+					"	Please consider fixing this in " ~ toLower(file) ~
+					".toml of the sheet `" ~ sheet ~ "`";
+
+				writeln(red(str));
+				return false;
+			} else {
+				pp_info(&same_info);
+				return true;
+			}
+		} else {
+			import std.conv;
+			return directly_lookup(sheet, to!string(same[0]) , same);
+		}
+	}
+
+	// Check if it's only one meaning
+
+	p = "desc" in info;
+	if(p != null) {
+		pp_sheet(sheet);
+		pp_info(&info);
+		return true;
+	}
+
+	// Multiple meanings in one sheet
+
+	string[] info_names;
+	foreach( k, v; info.table.keys) {	// yes, info is TOMLValue and can transformed to a table(aa)
+		info_names ~= v;
+	}
+
+	if (info_names.length != 0) {
+		pp_sheet(sheet);
+
+		foreach(_, meaning; info_names) {
+			TOMLValue multi_ref = dict[word];
+			TOMLValue reference = multi_ref[meaning];
+			pp_info(&reference);
+			// last meaning doesn't show this separate line
+			if (info_names[info_names.length - 1] != meaning ){
+				write(blue(bold("OR")), "\n");
+			}
+		}
+
+		return true;
+
+	} else {
+		return false;
+	}
+}
 
 
 
@@ -319,7 +437,7 @@ void main(string[] args)
 
 	// pp_info(&emacs);
 
-
+	writeln(lookup("cryptic_computer","j","jpg"));
 
 	string arg;
 	int arg_num = cast(int)args.length;	// ulong to int
