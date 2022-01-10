@@ -214,6 +214,67 @@ void pp_sheet(string sheet) {
 }
 
 
+//  Used for synonym jump
+//  Because we absolutely jump to a must-have word
+//  So we can directly lookup to it
+//
+//  Notice that, we must jump to a specific word definition
+//  So in the toml file, you must specify the precise word.
+//  If it has multiple meanings, for example
+//
+//    [blah]
+//    same = "XDG"  # this is wrong
+//
+//    [blah]
+//    same = "XDG.Download" # this is right
+bool directly_lookup(string sheet, string file, string word) {
+
+	import std.ascii : toLower;	
+	import core.stdc.stdlib : exit;
+
+	TOMLDocument dict;
+
+	bool dict_status = load_dictionary(sheet, ""~toLower(file[0]), &dict);
+
+	if(dict_status == false) {
+		writeln("WARN: Synonym jumps to a wrong place");
+		exit(0);
+	}
+
+	string[] words = word.split("."); // [XDG Download]
+	string dictword = words[0];       // XDG [Download]
+
+	TOMLValue info;
+
+	if (words.length == 1) { // [HEHE]
+
+		info = dict[dictword];
+
+	} else { //  [XDG Download]
+		string explain = words[1];
+		TOMLValue indirect_info = dict[dictword];
+		info = indirect_info[explain];
+	}
+
+	// Warn user this is the toml maintainer's fault
+	// the info map is empty
+	if (info == null) {
+		string str = "WARN: Synonym jumps to a wrong place at `%s` \n" ~
+			"Please consider fixing this in `%s.toml` of the sheet `%s`";
+
+		string redstr = red(format(str, word, ""~toLower(file[0]), sheet));
+
+		writeln(redstr);
+		exit(0);
+	}
+
+	pp_info(&info);
+	return true; // always true
+}
+
+
+
+
 void solve_word(string word_2_solve)
 {
     writeln("TODO: solve word");
@@ -259,7 +320,6 @@ void main(string[] args)
 	// pp_info(&emacs);
 
 
-	update_sheets("");
 
 	string arg;
 	int arg_num = cast(int)args.length;	// ulong to int
