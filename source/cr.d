@@ -112,9 +112,35 @@ unittest {
 }
 
 
-void update_sheets(string sheet_repo)
-{
-    writeln("TODO: update sheets");
+void update_sheets(string sheet_repo) {
+
+	add_default_sheet_if_none_exist();
+
+	if(sheet_repo == "") {
+		writeln("cr: Updating all sheets...");
+
+		import std.file;
+		auto dir = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
+		// https://dlang.org/library/std/file/dir_entries.html
+		foreach(file; dir){
+
+			string sheet = file.baseName;
+			writefln("cr: Wait to update %s...", sheet);
+
+			auto gitcl = executeShell(
+				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ sheet ~ " pull -q");
+			if (gitcl.status != 0) writeln(gitcl.output);
+		}
+		writeln("cr: Update done");
+	
+	} else {
+		writeln("cr: Adding new sheet...");
+		auto gitcl = executeShell(
+				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ sheet_repo ~ " -q");
+		if (gitcl.status != 0) writeln(gitcl.output);
+		writeln("cr: Add new sheet done");
+	}
+
 }
 
 
@@ -219,25 +245,21 @@ void main(string[] args)
 		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
 	}	
 	
-	TOMLDocument doc;
-	bool status = load_dictionary("cryptic_computer","e",&doc);
-	if (status) {
-		writeln("OK");
-		// writeln(doc);
-	}
-	else
-		writeln("Failed");
+	// TOMLDocument doc;
+	// bool status = load_dictionary("cryptic_computer","e",&doc);
+	// if (status) {
+	// 	writeln("OK");
+	// 	// writeln(doc);
+	// }
+	// else
+	// 	writeln("Failed");
 	
-	auto emacs = doc["emacs"];
+	// auto emacs = doc["emacs"];
 
-	// string haha = format("%s",emacs["desc"]);
-	// writeln(haha);
-
-	pp_info(&emacs);
-	// writeln(emacs);
-	// writeln(emacs);
+	// pp_info(&emacs);
 
 
+	update_sheets("");
 
 	string arg;
 	int arg_num = cast(int)args.length;	// ulong to int
