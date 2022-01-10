@@ -1,2 +1,2 @@
-dmd -unittest .\cr.d
+dmd -unittest .\source\cr.d
 .\cr.exe

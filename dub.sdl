@@ -1,0 +1,6 @@
+name "cryptic-resolver"
+description "Command line tool to record and explain cryptic commands in any filed."
+authors "ccmywish"
+copyright "Copyright © 2022, ccmywish"
+license "MIT"
+dependency "toml-foolery" version="~>2.1.0"

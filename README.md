@@ -177,9 +177,11 @@ In one sheet, you should consider adding a subkey to differ each other like the 
 This is built in D v2.098
 
 maybe you need `sudo` access
-
-- `rdmd cr`
-- `./test-scoop.ps1`  
+- `dub init`
+- `dub add toml-foolery` to add dependency
+- `dub` to install all dependecies
+- `rdmd source/cr.d`
+- `./unittest.ps1`  
 
 
 
