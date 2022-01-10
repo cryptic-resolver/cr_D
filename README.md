@@ -178,7 +178,7 @@ This is built in D v2.098
 
 maybe you need `sudo` access
 - `dub init`
-- `dub add toml-foolery` to add dependency
+- `dub add toml` to add dependency
 - `dub` to install all dependecies
 - `rdmd source/cr.d`
 - `./unittest.ps1`  

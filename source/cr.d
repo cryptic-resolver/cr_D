@@ -15,6 +15,8 @@ import std.path;
 import std.format;
 import std.process;
 
+import toml;
+
 
 // Use this declaration rather than `enum`
 // so that we can assign it in runtime
@@ -116,29 +118,26 @@ void update_sheets(string sheet_repo)
 
 
 
-//
+
 // path: sheet name, eg. cryptic_computer
 // file: dict(file) name, eg. a,b,c,d
 // dict: the concrete dict
 // 		 var dict map[string]interface{}
-//
-// bool load_dictionary(string path, string file, dictptr *map[string]interface{}) {
+// 
+bool load_dictionary(string path, string file, TOMLDocument* doc) {
 
-// 	string toml_file = CRYPTIC_RESOLVER_HOME ~ format("/%s/%s.toml", path, file);
+	string toml_file = CRYPTIC_RESOLVER_HOME ~ format("/%s/%s.toml", path, file);
 
-// 	if _, err := os.Stat(toml_file); err == nil {
-// 		// read file into data
-// 		data, _ := ioutil.ReadFile(toml_file)
-// 		datastr := string(data)
+	import std.file;
 
-// 		if _, err := toml.Decode(datastr, dictptr); err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		return true
-// 	} else {
-// 		return false
-// 	}
-// }
+	if (! exists(toml_file)) {
+		return false;
+	} else {
+		*doc = parseTOML(cast(string)read(toml_file));
+		return true;
+	}
+
+}
 
 
 
@@ -186,13 +185,9 @@ void main(string[] args)
 		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
 	}	
 	
-	writeln(is_there_any_sheet());
 
 	string arg;
-	int arg_num = args.length;
-
-	// DEBUG
-	// writefln("arg_num is %d\n",arg_num);
+	int arg_num = cast(int)args.length;	// ulong to int
 
 	if(arg_num < 2) {
 		arg = "";
