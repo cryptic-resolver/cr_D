@@ -176,15 +176,17 @@ void pp_info(TOMLValue* infodoc ){
 	// We should convert disp, desc, full into string
 
 	// can't directly cast TOMLValue to string
-	string disp = info["disp"].str;
-	
-	if (disp == "") {
+	auto p = "disp" in info;
+	string disp;
+	if (p is null ){
 		disp = red("No name!");
+	}else {
+		disp = info["disp"].str;
 	}
 
 	writef("\n  %s: %s\n", disp, info["desc"].str);
 
-	auto p = "full" in info;
+	p = "full" in info;
 	if (p !is null ){
 		writef("\n  %s\n", info["full"].str);
 	}
