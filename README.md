@@ -4,7 +4,7 @@
 
 
 [![word-count](https://img.shields.io/badge/Keywords%20Inlcuded-437-brightgreen)](#default-sheets)
-[![GitHub version](https://badge.fury.io/gh/cryptic-resolver%2Fcr_Go.svg)](https://badge.fury.io/gh/cryptic-resolver%2Fcr_Go)
+[![GitHub version](https://badge.fury.io/gh/cryptic-resolver%2Fcr_D.svg)](https://badge.fury.io/gh/cryptic-resolver%2Fcr_D)
 
 </div>
 
@@ -32,20 +32,9 @@ Not only can it be used in the computer filed, but also you can use this to mana
 
 ## Install
 
-On Windows
+I've built it on amd64 Windows already.
 
-```bash
-scoop install "https://raw.githubusercontent.com/cryptic-resolver/cr_Go/master/install/cryptic-resolver.json"
-```
-
-On Linux or macOS
-```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/cryptic-resolver/cr_Go/master/install/i.sh)"
-```
-
-<br>
-
-Or just manually install from the [releases](https://github.com/cryptic-resolver/cr_Go/releases) page.
+Just manually install it from the [releases](https://github.com/cryptic-resolver/cr_D/releases) page.
 
 Tested well on `Windows 11` and `Ubuntu`.
 
@@ -184,6 +173,7 @@ maybe you need `sudo` access
 - `dub --force -- emacs` to force rebuild
 - `rdmd source/cr.d`
 - `./unittest.ps1`  
+- `./build.ps1`
 
 
 
