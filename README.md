@@ -32,9 +32,22 @@ Not only can it be used in the computer filed, but also you can use this to mana
 
 ## Install
 
-I've built it on amd64 Windows already.
+I must say, on Windows, `cr` implemented in `Dlang` (this repo) is double faster than that in `Go`, although both time consumed are little.
 
-Just manually install it from the [releases](https://github.com/cryptic-resolver/cr_D/releases) page.
+On Windows
+
+```bash
+scoop install "https://raw.githubusercontent.com/cryptic-resolver/cr_D/master/install/cryptic-resolver.json"
+```
+
+On Linux or macOS
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/cryptic-resolver/cr_D/master/install/i.sh)"
+```
+
+<br>
+
+Or just manually install from the [releases](https://github.com/cryptic-resolver/cr_D/releases) page.
 
 Tested well on `Windows 11` and `Ubuntu`.
 
