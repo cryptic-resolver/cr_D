@@ -20,6 +20,8 @@ docs.json
 __dummy.html
 docs/
 
+build/
+
 # Code coverage
 *.lst
 

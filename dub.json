@@ -10,5 +10,6 @@
 	"license": "MIT",
 	"name": "cryptic-resolver",
 	"targetType": "executable",
-	"targetName": "cr"
+	"targetName": "cr",
+	"targetPath": "./build"
 }
