@@ -239,12 +239,11 @@ bool directly_lookup(string sheet, string file, string word) {
 	}
 
 	string[] words = word.split("."); // [XDG Download]
-	string dictword = words[0];       // XDG [Download]
+	string dictword = toLower(words[0]);       // XDG [Download]
 
 	TOMLValue info;
 
 	if (words.length == 1) { // [HEHE]
-
 		info = dict[dictword];
 
 	} else { //  [XDG Download]
@@ -333,7 +332,7 @@ bool lookup(string sheet, string file, string word) {
 		writeln(blue(bold(word)) ~ " redirects to " ~ blue(bold(same)));
 
 		// no need to load dictionary again
-		if (toLower(word[0]) == file[0]) {	// file is just "a" "b" "c" "d" "e"
+		if (toLower(word[0]) == same[0]) {	// file is just "a" "b" "c" "d" "e"
 			// Explicitly convert it to downcase.
 			// In case the dictionary maintainer redirects to an uppercase word by mistake.
 			same = toLower(same);
