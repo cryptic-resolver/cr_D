@@ -32,8 +32,6 @@ Not only can it be used in the computer filed, but also you can use this to mana
 
 ## Install
 
-I must say, on Windows, `cr` implemented in `Dlang` (this repo) is double faster than that in `Go`, although both time consumed are little.
-
 On Windows
 
 ```bash
