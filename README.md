@@ -181,6 +181,7 @@ maybe you need `sudo` access
 - `dub add toml` to add dependency
 - `dub` to install all dependecies and build then run
 - `dub -- emacs` to test with arguments
+- `dub --force -- emacs` to force rebuild
 - `rdmd source/cr.d`
 - `./unittest.ps1`  
 

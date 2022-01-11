@@ -331,15 +331,18 @@ bool lookup(string sheet, string file, string word) {
 		// point out to user, this is a jump
 		writeln(blue(bold(word)) ~ " redirects to " ~ blue(bold(same)));
 
+		// Explicitly convert it to downcase.
+		// In case the dictionary maintainer redirects to an uppercase word by mistake.
+		same = toLower(same);
+		
 		// no need to load dictionary again
-		if (toLower(word[0]) == same[0]) {	// file is just "a" "b" "c" "d" "e"
-			// Explicitly convert it to downcase.
-			// In case the dictionary maintainer redirects to an uppercase word by mistake.
-			same = toLower(same);
+		if (toLower(word[0]) == same[0]) {	// same is just "a" "b" "c" "d" , etc ...
+			
 			TOMLValue same_info = dict[same];
+			
 			if (same_info == null) { // Need repair
 				string str = "WARN: Synonym jumps to the wrong place at `" ~ same ~ "`\n" ~
-					"	Please consider fixing this in " ~ toLower(file) ~
+					"	Please consider fixing this in " ~ same[0] ~
 					".toml of the sheet `" ~ sheet ~ "`";
 
 				writeln(red(str));
