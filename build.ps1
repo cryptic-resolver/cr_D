@@ -4,7 +4,7 @@
 #   Created on    : <2022-1-11>
 #   Last modified : <2022-1-11>
 #
-#   Build cr on multi-platform via PowerShell
+#   Build cr on Windows via PowerShell
 #   ---------------------------------------------------
 
 Write-Host "Building for Windows x64"

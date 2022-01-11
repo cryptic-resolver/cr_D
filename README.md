@@ -38,7 +38,7 @@ On Windows
 scoop install "https://raw.githubusercontent.com/cryptic-resolver/cr_D/master/install/cryptic-resolver.json"
 ```
 
-On Linux or macOS
+On Linux
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/cryptic-resolver/cr_D/master/install/i.sh)"
 ```
@@ -48,6 +48,8 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/cryptic-resolver/cr_D/ma
 Or just manually install from the [releases](https://github.com/cryptic-resolver/cr_D/releases) page.
 
 Tested well on `Windows 11` and `Ubuntu`.
+
+Note: You can build it for yourself on macOS
 
 <br>
 
