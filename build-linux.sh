@@ -3,9 +3,9 @@
 #   File          : build-linux.sh
 #   Authors       : ccmywish <ccmywish@qq.com>
 #   Created on    : <2022-1-11>
-#   Last modified : <2022-1-11>
+#   Last modified : <2022-1-12>
 #
-#   Build cr on Linux via Bash
+#   Build cr on Linux via Bash(and Ruby)
 #   ---------------------------------------------------
 
 echo "Building for Linux x64"
@@ -28,3 +28,16 @@ fi
 
 mv ./build/cr $binname
 echo "Generate Linux binary in ./build"
+
+
+# Ruby accepts redirected(<<) accpet
+# same like  ` echo 'xxx' | ruby  `
+# 
+ruby << EOF
+    a = File.read("./install/i-template.sh"); 
+    a.sub!("cr_ver=\"1.0.0\"","cr_ver=\"${version}\"");
+    File.write("./install/i.sh",a);
+EOF
+
+echo "Generate i.sh in install/"
+echo
