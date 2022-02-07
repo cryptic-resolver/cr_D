@@ -176,7 +176,7 @@ In one sheet, you should consider adding a subkey to differ each other like the 
 
 ## cr in D development
 
-This is built in D v2.098
+This is built in D v2.098(You need Visual Studio on Windows first)
 
 maybe you need `sudo` access
 - `dub init`

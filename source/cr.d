@@ -2,7 +2,7 @@
 //   File          : cr.d
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-1-9>
-//   Last modified : <2022-1-10>
+//   Last modified : <2022-2-7>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
@@ -33,7 +33,7 @@ enum CRYPTIC_DEFAULT_SHEETS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "1.0.0";
+enum CRYPTIC_VERSION = "1.1.0";
 
 
 //
@@ -196,10 +196,10 @@ void pp_info(TOMLValue* infodoc ){
 	if (p !is null ){
 		auto see = info["see"].array;
 
-		writef("\n%s ", purple("SEE ALSO "));
+		writef("\n%s ", purple("SEE ALSO"));
 
 		foreach(index, val ; see) {
-			write(underline(val.str) );
+			write(underline(val.str),' ');
 		}
 
 		writeln();
@@ -471,6 +471,7 @@ void help()
     string help = "cr: Cryptic Resolver version %s in D
 
 usage:
+		cr -v                     => print version
     cr -h                     => print this help
     cr -u (xx.com//repo.git)  => update default sheet or add sheet from a git repo
     cr emacs                  => Edit macros: a feature-rich editor";
@@ -478,6 +479,13 @@ usage:
     writefln(help, CRYPTIC_VERSION);
 }
 
+
+void print_version() 
+{
+    string help = "cr: Cryptic Resolver version %s in D";
+	
+    writefln(help, CRYPTIC_VERSION);
+}
 
 
 
@@ -507,6 +515,9 @@ void main(string[] args)
 		break;
 	case "-h":
 		help();
+		break;
+	case "-v":
+		print_version();
 		break;
 	case "-u":
 		if (arg_num > 2) {
