@@ -6,7 +6,7 @@
     "architecture": {
         "64bit": {
             "url": "https://github.com/cryptic-resolver/cr_D/releases/download/v1.1.0/cr-1.1.0-amd64-pc-windows.exe",
-            "hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+            "hash": "67553A434606020664AB48D7F759391BB15AC1089B5E6E33C0257B1090E1D277"
         }
     },
     "bin": [ ["cr-1.1.0-amd64-pc-windows.exe","cr"] ] ,
