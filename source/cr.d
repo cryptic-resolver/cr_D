@@ -33,7 +33,7 @@ enum CRYPTIC_DEFAULT_SHEETS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "1.1.0";
+enum CRYPTIC_VERSION = "1.1.2";
 
 
 //
@@ -465,13 +465,13 @@ void solve_word(string word_2_solve){
 }
 
 
-
+// 'usage' should type with space!! not tab!!
 void help() 
 {
     string help = "cr: Cryptic Resolver version %s in D
 
 usage:
-		cr -v                     => print version
+    cr -v                     => print version
     cr -h                     => print this help
     cr -u (xx.com//repo.git)  => update default sheet or add sheet from a git repo
     cr emacs                  => Edit macros: a feature-rich editor";

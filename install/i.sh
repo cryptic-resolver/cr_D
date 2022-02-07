@@ -12,7 +12,7 @@
 echo "Downloading binary from github.com/cryptic-resolver/cr_D"
 
 ostype=$(uname) 
-cr_ver="1.1.0"
+cr_ver="1.1.2"
 
 dlprefix="https://github.com/cryptic-resolver/cr_D/releases/download/v${dlprefix}${cr_ver}/cr-${cr_ver}-"
 
