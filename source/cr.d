@@ -33,7 +33,7 @@ enum CRYPTIC_DEFAULT_DICTS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "2.0";
+enum CRYPTIC_VERSION = "2.1";
 
 
 //
@@ -63,8 +63,8 @@ unittest {
 // core: logic
 //
 
-bool is_there_any_sheet() {
-
+bool is_there_any_dict()
+{
 	// import just be valid in this function scope
 	import std.file;
 	import std.array;
@@ -88,13 +88,13 @@ bool is_there_any_sheet() {
 
 unittest {
 	// can't test it
-	// assert(is_there_any_sheet()==true);
+	// assert(is_there_any_dict()==true);
 }
 
 
-void add_default_sheet_if_none_exist() {
-
-    if (!is_there_any_sheet()) {
+void add_default_dicts_if_none_exists()
+{
+    if (!is_there_any_dict()) {
 		writeln("cr: Adding default sheets...");
 
 		foreach(key, value; CRYPTIC_DEFAULT_DICTS) {
@@ -108,43 +108,34 @@ void add_default_sheet_if_none_exist() {
 	}
 }
 
-unittest {
-	// add_default_sheet_if_none_exist();
-}
 
+void update_dicts()
+{
+	add_default_dicts_if_none_exists();
 
-void update_sheets(string sheet_repo) {
+	writeln("cr: Updating all dictionaries...");
 
-	add_default_sheet_if_none_exist();
-
-	if(sheet_repo == "") {
-		writeln("cr: Updating all sheets...");
-
-		import std.file;
-		auto dir = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
-		// https://dlang.org/library/std/file/dir_entries.html
-		foreach(file; dir){
-
-			string sheet = file.baseName;
-			writefln("cr: Wait to update %s...", sheet);
-
-			auto gitcl = executeShell(
-				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ sheet ~ " pull -q");
-			if (gitcl.status != 0) writeln(gitcl.output);
-		}
-		writeln("cr: Update done");
-
-	} else {
-		writeln("cr: Adding new sheet...");
+	import std.file;
+	auto dir = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
+	// https://dlang.org/library/std/file/dir_entries.html
+	foreach(file; dir){
+		string sheet = file.baseName;
+		writefln("cr: Wait to update %s...", sheet);
 		auto gitcl = executeShell(
-				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ sheet_repo ~ " -q");
+			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ sheet ~ " pull -q");
 		if (gitcl.status != 0) writeln(gitcl.output);
-		writeln("cr: Add new sheet done");
 	}
-
+	writeln("cr: Update done");
 }
 
 
+void add_dict(string repo){
+	writeln("cr: Adding new dictionary...");
+	auto gitcl = executeShell(
+			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ repo ~ " -q");
+	if (gitcl.status != 0) writeln(gitcl.output);
+	writeln("cr: Add new dictionary done");
+}
 
 
 // path: sheet name, eg. cryptic_computer
@@ -152,8 +143,8 @@ void update_sheets(string sheet_repo) {
 // dict: the concrete dict
 // 		 var dict map[string]interface{}
 //
-bool load_dictionary(string path, string file, TOMLDocument* doc) {
-
+bool load_sheet(string path, string file, TOMLDocument* doc)
+{
 	string toml_file = CRYPTIC_RESOLVER_HOME ~ format("/%s/%s.toml", path, file);
 
 	import std.file;
@@ -171,7 +162,8 @@ bool load_dictionary(string path, string file, TOMLDocument* doc) {
 
 
 // Pretty print the info of the given word
-void pp_info(TOMLValue* infodoc ){
+void pp_info(TOMLValue* infodoc )
+{
 	auto info = *infodoc;
 	// We should convert disp, desc, full into string
 
@@ -208,12 +200,13 @@ void pp_info(TOMLValue* infodoc ){
 }
 
 
-// Print default cryptic_ sheets
-void pp_sheet(string sheet) {
+// Print default cryptic_ dictionaries
+void pp_dict(string sheet) {
 	writeln(green("From: " ~ sheet));
 }
 
 
+//
 //  Used for synonym jump
 //  Because we absolutely jump to a must-have word
 //  So we can directly lookup to it
@@ -227,13 +220,14 @@ void pp_sheet(string sheet) {
 //
 //    [blah]
 //    same = "XDG.Download" # this is right
-bool directly_lookup(string sheet, string file, string word) {
-
+//
+bool directly_lookup(string sheet, string file, string word)
+{
 	import core.stdc.stdlib : exit;
 
 	TOMLDocument dict;
 
-	bool dict_status = load_dictionary(sheet, toLower(file), &dict); // std.string: toLower
+	bool dict_status = load_sheet(sheet, toLower(file), &dict); // std.string: toLower
 
 	if(dict_status == false) {
 		writeln("WARN: Synonym jumps to a wrong place");
@@ -282,13 +276,13 @@ bool directly_lookup(string sheet, string file, string word) {
 //    2.1 If yes, then just print it using `pp_info`
 //    2.2 If not, then collect all the meanings of the word, and use `pp_info`
 //
-bool lookup(string sheet, string file, string word) {
-
+bool lookup(string sheet, string file, string word)
+{
 	import core.stdc.stdlib : exit;
 
 	TOMLDocument dict;
 
-	bool dict_status = load_dictionary(sheet, file, &dict);
+	bool dict_status = load_sheet(sheet, file, &dict);
 
 	if (dict_status == false) {
 		return false;
@@ -324,7 +318,7 @@ bool lookup(string sheet, string file, string word) {
 	p = ("same" in info);
 	if(p !is null){
 		same = info["same"].str;
-		pp_sheet(sheet);
+		pp_dict(sheet);
 		// This is a jump
 		writeln(blue(bold(word)) ~ " redirects to " ~ blue(bold(same)));
 
@@ -359,7 +353,7 @@ bool lookup(string sheet, string file, string word) {
   bool type_1_exist_flag = false;
 	p = "desc" in info;
 	if(p != null) {
-		pp_sheet(sheet);
+		pp_dict(sheet);
 		pp_info(&info);
 		type_1_exist_flag = true;
 	}
@@ -381,13 +375,13 @@ bool lookup(string sheet, string file, string word) {
 	}
 
 	// DEBUG
-	writeln(categories);
+	// writeln(categories);
 
 	if (categories.length != 0) {
 		if(type_1_exist_flag)
       write(blue(bold("OR")), "\n");
     else
-      pp_sheet(sheet);
+      pp_dict(sheet);
 
 		foreach(_, meaning; categories) {
 			TOMLValue multi_ref = dict[word];
@@ -410,16 +404,16 @@ bool lookup(string sheet, string file, string word) {
 //
 //  The main logic of `cr`
 //    1. Search the default's first sheet first
-//    2. Search the rest sheets in the cryptic sheets default dir
+//    2. Search the rest dictionaries in the cryptic dictionaries default dir
 //
 //  The `search` procedure is done via the `lookup` function. It
 //  will print the info while finding. If `lookup` always return
-//  false then means lacking of this word in our sheets. So a wel-
+//  false then means lacking of this word in our dictionaries. So a wel-
 //  comed contribution is prinetd on the screen.
 //
-void solve_word(string word_2_solve){
-
-	add_default_sheet_if_none_exist();
+void solve_word(string word_2_solve)
+{
+	add_default_dicts_if_none_exists();
 
 	string word = toLower(word_2_solve);
 	// The index is the toml file we'll look into
@@ -457,8 +451,8 @@ void solve_word(string word_2_solve){
 
 	if(result_flag != true) {
 		writeln("cr: Not found anything.\n\n" ~
-			"You may use `cr -u` to update the sheets.\n" ~
-			"Or you could contribute to our sheets: Thanks!");
+			"You may use `cr -u` to update the dictionaries.\n" ~
+			"Or you could contribute to our dictionaries: Thanks!");
 
 		writefln("    1. computer:  %s", CRYPTIC_DEFAULT_DICTS["computer"]);
 		writefln("    2. common:    %s", CRYPTIC_DEFAULT_DICTS["common"]);
@@ -482,7 +476,7 @@ void help()
 usage:
     cr -v                  => Print version
     cr -h                  => Print this help
-    cr -l                  => Print version
+    cr -l                  => List local dictionaries
     cr -u                  => Update all dictionaries
     cr -a xx.com/repo.git  => Add a new dictionary
     cr emacs               => Edit macros: a feature-rich editor
@@ -495,8 +489,22 @@ usage:
 void print_version()
 {
     string help = "cr: Cryptic Resolver version %s in D";
-
     writefln(help, CRYPTIC_VERSION);
+}
+
+
+void list_dictionaries()
+{
+	import std.file;
+	import std.array;
+
+	auto path = CRYPTIC_RESOLVER_HOME;
+	auto dirs = dirEntries(path, SpanMode.shallow).array; // DirEntry[]
+
+	import std.conv : to;
+	foreach(i, dict; dirs){
+		writefln("%s. %s", blue(to!string(i+1)), bold(green(dict.baseName)) );
+	}
 }
 
 
@@ -523,19 +531,23 @@ void main(string[] args)
 	switch (arg) {
 	case "":
 		help();
-		add_default_sheet_if_none_exist();
-		break;
-	case "-h":
-		help();
+		add_default_dicts_if_none_exists();
 		break;
 	case "-v":
 		print_version();
 		break;
+	case "-h":
+		help();
+		break;
+	case "-l":
+		list_dictionaries();
+		break;
 	case "-u":
+		update_dicts();
+		break;
+	case "-a":
 		if (arg_num > 2) {
-			update_sheets(args[2]);
-		} else {
-			update_sheets("");
+			add_dict(args[2]);
 		}
 		break;
 	default:
