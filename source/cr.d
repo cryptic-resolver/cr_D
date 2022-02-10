@@ -20,9 +20,12 @@ import std.string;
 import toml;
 
 
-// Use this declaration rather than `enum`
-// so that we can assign it in runtime
-static string CRYPTIC_RESOLVER_HOME;
+// Can't use `enum`
+//    so that we can assign it in runtime
+//
+// MUST USE __gshared(equivalent to C's static)
+//    so that our threads can know it
+__gshared string CRYPTIC_RESOLVER_HOME;
 
 
 enum CRYPTIC_DEFAULT_DICTS = [
@@ -33,7 +36,7 @@ enum CRYPTIC_DEFAULT_DICTS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "2.3";
+enum CRYPTIC_VERSION = "3.0";
 
 
 //
@@ -90,41 +93,76 @@ unittest {
 	// assert(is_there_any_dict()==true);
 }
 
+import std.concurrency;
+void _pull_repos(string name, string repo, Tid parentTid){
+  writeln("cr: Pulling cryptic_" ~ name ~ "...");
+  auto gitcl = executeShell(
+		"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ repo ~ " -q");
+	if (gitcl.status != 0)
+    writeln(gitcl.output);
+  else
+    send(parentTid, true);
+}
 
 void add_default_dicts_if_none_exists()
 {
-    if (!is_there_any_dict()) {
-		writeln("cr: Adding default dictionaries...");
+  if (!is_there_any_dict()) {
+	  writeln("cr: Adding default dictionaries...");
 
-		foreach(key, value; CRYPTIC_DEFAULT_DICTS) {
-			writeln("cr: Pulling cryptic_" ~ key ~ "...");
-			auto gitcl = executeShell(
-				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ value ~ " -q");
-			if (gitcl.status != 0) writeln(gitcl.output);
-		}
-
-		writeln("cr: Add done");
+	  foreach(key, value; CRYPTIC_DEFAULT_DICTS) { // parallel can't apply to aa
+      spawn(&_pull_repos, key, value, thisTid);
+    }
+    auto results = CRYPTIC_DEFAULT_DICTS.length;
+    int i = 0;
+    while(i<results){
+      receive((bool b){
+        if( b == true)
+          i++;
+      } );
+    }
+    if(results == i){
+      writeln("cr: Add done");
+    }
 	}
 }
 
 
+void _update_repo(string repo, Tid parentTid){
+  writefln("cr: Wait to update %s...", repo);
+  auto gitcl = executeShell(
+			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ repo ~ " pull -q");
+
+  if (gitcl.status != 0)
+    writeln(gitcl.output);
+  else
+    send(parentTid, true);
+}
+
 void update_dicts()
 {
 	add_default_dicts_if_none_exists();
-
 	writeln("cr: Updating all dictionaries...");
 
 	import std.file;
 	auto dir = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
-	// https://dlang.org/library/std/file/dir_entries.html
-	foreach(file; dir){
-		string dict = file.baseName;
-		writefln("cr: Wait to update %s...", dict);
-		auto gitcl = executeShell(
-			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ dict ~ " pull -q");
-		if (gitcl.status != 0) writeln(gitcl.output);
-	}
-	writeln("cr: Update done");
+
+  foreach(file; dir) {
+    string dict = file.baseName;
+    spawn(&_update_repo, dict, thisTid);
+  }
+
+  // NOTE:!!! Here can't use dir.array.length!!!
+  auto results = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow).array.length;
+  int i = 0;
+  while(i<results){
+    receive((bool b){
+      if( b == true)
+        i++;
+    });
+  }
+  if(results == i){
+    writeln("cr: Update done");
+  }
 }
 
 
