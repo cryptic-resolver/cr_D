@@ -33,7 +33,7 @@ enum CRYPTIC_DEFAULT_DICTS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "2.1";
+enum CRYPTIC_VERSION = "2.2";
 
 
 //
@@ -67,7 +67,6 @@ bool is_there_any_dict()
 {
 	// import just be valid in this function scope
 	import std.file;
-	import std.array;
 
 	string path = CRYPTIC_RESOLVER_HOME;
 
@@ -95,7 +94,7 @@ unittest {
 void add_default_dicts_if_none_exists()
 {
     if (!is_there_any_dict()) {
-		writeln("cr: Adding default sheets...");
+		writeln("cr: Adding default dictionaries...");
 
 		foreach(key, value; CRYPTIC_DEFAULT_DICTS) {
 			writeln("cr: Pulling cryptic_" ~ key ~ "...");
@@ -119,10 +118,10 @@ void update_dicts()
 	auto dir = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
 	// https://dlang.org/library/std/file/dir_entries.html
 	foreach(file; dir){
-		string sheet = file.baseName;
-		writefln("cr: Wait to update %s...", sheet);
+		string dict = file.baseName;
+		writefln("cr: Wait to update %s...", dict);
 		auto gitcl = executeShell(
-			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ sheet ~ " pull -q");
+			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ "/" ~ dict ~ " pull -q");
 		if (gitcl.status != 0) writeln(gitcl.output);
 	}
 	writeln("cr: Update done");
@@ -138,26 +137,24 @@ void add_dict(string repo){
 }
 
 
-// path: sheet name, eg. cryptic_computer
-// file: dict(file) name, eg. a,b,c,d
-// dict: the concrete dict
-// 		 var dict map[string]interface{}
 //
-bool load_sheet(string path, string file, TOMLDocument* doc)
+// dict: 			 	dict name, eg. cryptic_computer
+// sheet_name: 	dict(file) name, eg. a,b,c,d
+// piece: 			the concrete of the sheet
+//
+bool load_sheet(string dict, string sheet_name, TOMLDocument* piece)
 {
-	string toml_file = CRYPTIC_RESOLVER_HOME ~ format("/%s/%s.toml", path, file);
+	string toml_file = CRYPTIC_RESOLVER_HOME ~ format("/%s/%s.toml", dict, sheet_name);
 
 	import std.file;
 
 	if (! exists(toml_file)) {
 		return false;
 	} else {
-		*doc = parseTOML(cast(string)read(toml_file));
+		*piece = parseTOML(cast(string)read(toml_file));
 		return true;
 	}
-
 }
-
 
 
 
@@ -167,7 +164,6 @@ void pp_info(TOMLValue* infodoc )
 	auto info = *infodoc;
 	// We should convert disp, desc, full into string
 
-	// can't directly cast TOMLValue to string
 	auto p = "disp" in info;
 	string disp;
 	if (p is null ){
@@ -201,8 +197,8 @@ void pp_info(TOMLValue* infodoc )
 
 
 // Print default cryptic_ dictionaries
-void pp_dict(string sheet) {
-	writeln(green("From: " ~ sheet));
+void pp_dict(string dict) {
+	writeln(green("From: " ~ dict));
 }
 
 
@@ -221,30 +217,31 @@ void pp_dict(string sheet) {
 //    [blah]
 //    same = "XDG.Download" # this is right
 //
-bool directly_lookup(string sheet, string file, string word)
+bool directly_lookup(string dict, string sheet_name, string word)
 {
 	import core.stdc.stdlib : exit;
 
-	TOMLDocument dict;
+	TOMLDocument piece;
 
-	bool dict_status = load_sheet(sheet, toLower(file), &dict); // std.string: toLower
+	// std.string: toLower
+	bool status = load_sheet(dict, toLower(sheet_name), &piece);
 
-	if(dict_status == false) {
+	if(status == false) {
 		writeln("WARN: Synonym jumps to a wrong place");
 		exit(0);
 	}
 
-	string[] words = word.split("."); // [XDG Download]
-	string dictword = toLower(words[0]);       // XDG [Download]
+	string[] words = word.split("."); 		// [XDG Download]
+	string dictword = toLower(words[0]);  // XDG [Download]
 
 	TOMLValue info;
 
 	if (words.length == 1) { // [HEHE]
-		info = dict[dictword];
+		info = piece[dictword];
 
 	} else { //  [XDG Download]
 		string explain = words[1];
-		TOMLValue indirect_info = dict[dictword];
+		TOMLValue indirect_info = piece[dictword];
 		info = indirect_info[explain];
 	}
 
@@ -252,9 +249,9 @@ bool directly_lookup(string sheet, string file, string word)
 	// the info map is empty
 	if (info == null) {
 		string str = "WARN: Synonym jumps to a wrong place at `%s` \n
-	Please consider fixing this in `%s.toml` of the sheet `%s`";
+	Please consider fixing this in `%s.toml` of the dictionary `%s`";
 
-		string redstr = red(format(str, word, toLower(file), sheet));
+		string redstr = red(format(str, word, toLower(sheet_name), dict));
 
 		writeln(redstr);
 		exit(0);
@@ -265,8 +262,8 @@ bool directly_lookup(string sheet, string file, string word)
 }
 
 
-
-//  Lookup the given word in a dictionary (a toml file in a sheet) and also print.
+//
+//  Lookup the given word in a sheet (a toml file) and also print.
 //  The core idea is that:
 //
 //  1. if the word is `same` with another synonym, it will directly jump to
@@ -276,15 +273,15 @@ bool directly_lookup(string sheet, string file, string word)
 //    2.1 If yes, then just print it using `pp_info`
 //    2.2 If not, then collect all the meanings of the word, and use `pp_info`
 //
-bool lookup(string sheet, string file, string word)
+bool lookup(string dict, string sheet_name, string word)
 {
 	import core.stdc.stdlib : exit;
 
-	TOMLDocument dict;
+	TOMLDocument piece;
 
-	bool dict_status = load_sheet(sheet, file, &dict);
+	bool status = load_sheet(dict, sheet_name, &piece);
 
-	if (dict_status == false) {
+	if (status == false) {
 		return false;
 	}
 
@@ -293,24 +290,24 @@ bool lookup(string sheet, string file, string word)
 	TOMLValue info;
 
 	// check whether the key is in aa
-	auto p = (word in dict);
+	auto p = (word in piece);
 	if (p is null){
 		return false;
 	} else {
-		info = dict[word];
+		info = piece[word];
 	}
 
 	// Warn if the info is empty. For example:
 	//   emacs = { }
 	if (info.table.keys.length == 0) {
 		string str = format("WARN: Lack of everything of the given word. \n
-	Please consider fixing this in the sheet `%s`", sheet);
+	Please consider fixing this in the dictionary `%s`", dict);
 		writeln(red(str));
 		exit(0);
 	}
 
 	// Check whether it's a synonym for anther word
-	// If yes, we should lookup into this sheet again, but maybe with a different file
+	// If yes, we should lookup into this dictionary again, but maybe with a different file
 
 	// writeln(info.table); //DEBUG
 
@@ -318,7 +315,7 @@ bool lookup(string sheet, string file, string word)
 	p = ("same" in info);
 	if(p !is null){
 		same = info["same"].str;
-		pp_dict(sheet);
+		pp_dict(dict);
 		// This is a jump
 		writeln(blue(bold(word)) ~ " redirects to " ~ blue(bold(same)));
 
@@ -329,12 +326,12 @@ bool lookup(string sheet, string file, string word)
 		// no need to load dictionary again
 		if (toLower(word[0]) == same[0]) {	// same is just "a" "b" "c" "d" , etc ...
 
-			TOMLValue same_info = dict[same];
+			TOMLValue same_info = piece[same];
 
 			if (same_info == null) { // Need repair
 				string str = "WARN: Synonym jumps to the wrong place at `" ~ same ~ "`\n" ~
 					"	Please consider fixing this in " ~ same[0] ~
-					".toml of the sheet `" ~ sheet ~ "`";
+					".toml of the dictionary `" ~ dict ~ "`";
 
 				writeln(red(str));
 				return false;
@@ -344,7 +341,7 @@ bool lookup(string sheet, string file, string word)
 			}
 		} else {
 			import std.conv;
-			return directly_lookup(sheet, to!string(same[0]) , same);
+			return directly_lookup(dict, to!string(same[0]) , same);
 		}
 	}
 
@@ -353,7 +350,7 @@ bool lookup(string sheet, string file, string word)
   bool type_1_exist_flag = false;
 	p = "desc" in info;
 	if(p != null) {
-		pp_dict(sheet);
+		pp_dict(dict);
 		pp_info(&info);
 		type_1_exist_flag = true;
 	}
@@ -381,10 +378,10 @@ bool lookup(string sheet, string file, string word)
 		if(type_1_exist_flag)
       write(blue(bold("OR")), "\n");
     else
-      pp_dict(sheet);
+      pp_dict(dict);
 
 		foreach(_, meaning; categories) {
-			TOMLValue multi_ref = dict[word];
+			TOMLValue multi_ref = piece[word];
 			TOMLValue reference = multi_ref[meaning];
 			pp_info(&reference);
 			// last meaning doesn't show this separate line
@@ -403,7 +400,7 @@ bool lookup(string sheet, string file, string word)
 
 //
 //  The main logic of `cr`
-//    1. Search the default's first sheet first
+//    1. Search the default's first dictionary first
 //    2. Search the rest dictionaries in the cryptic dictionaries default dir
 //
 //  The `search` procedure is done via the `lookup` function. It
@@ -426,18 +423,18 @@ void solve_word(string word_2_solve)
 	}
 
 	// Default's first should be 1st to consider
-	string first_sheet = "cryptic_computer";
+	string first_dict = "cryptic_computer";
 
 	// cache lookup results
 	bool[] results;
-	results ~= lookup(first_sheet, index, word);
+	results ~= lookup(first_dict, index, word);
 
 	import std.file;
 	auto rest = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
 	foreach(file; rest){
-		string sheet = file.baseName;
-		if(sheet != first_sheet) {
-			results ~= lookup(sheet, index, word);
+		string dict = file.baseName;
+		if(dict != first_dict) {
+			results ~= lookup(dict, index, word);
 		}
 	}
 
@@ -452,11 +449,11 @@ void solve_word(string word_2_solve)
 	if(result_flag != true) {
 		writeln("cr: Not found anything.\n\n" ~
 			"You may use `cr -u` to update the dictionaries.\n" ~
-			"Or you could contribute to our dictionaries: Thanks!");
+			"Or you could contribute to: ");
 
 		writefln("    1. computer:  %s", CRYPTIC_DEFAULT_DICTS["computer"]);
 		writefln("    2. common:    %s", CRYPTIC_DEFAULT_DICTS["common"]);
-		writefln("    3. science:	%s",   CRYPTIC_DEFAULT_DICTS["science"]);
+		writefln("    3. science:	  %s",   CRYPTIC_DEFAULT_DICTS["science"]);
 		writefln("    4. economy:   %s", CRYPTIC_DEFAULT_DICTS["economy"]);
 		writefln("    5. medicine:  %s", CRYPTIC_DEFAULT_DICTS["medicine"]);
 		writeln();
@@ -496,7 +493,6 @@ void print_version()
 void list_dictionaries()
 {
 	import std.file;
-	import std.array;
 
 	auto path = CRYPTIC_RESOLVER_HOME;
 	auto dirs = dirEntries(path, SpanMode.shallow).array; // DirEntry[]
