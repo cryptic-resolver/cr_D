@@ -1,0 +1,37 @@
+# http://editorconfig.org
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.rb]
+indent_size = 2
+max_line_length = 80
+
+[*.sh]
+indent_size = 2
+max_line_length = 80
+
+[*.py]
+indent_size = 2
+max_line_length = 80
+
+# D使用tab就是默认tab，把它扭过来
+[*.d]
+indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+[makefile]
+indent_style = tab
+[*.mk]
+indent_style = tab
+
+[*.md]
+trim_trailing_whitespace = false

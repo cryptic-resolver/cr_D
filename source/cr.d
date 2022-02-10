@@ -2,7 +2,7 @@
 //   File          : cr.d
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-1-9>
-//   Last modified : <2022-2-7>
+//   Last modified : <2022-2-9>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
@@ -25,7 +25,7 @@ import toml;
 static string CRYPTIC_RESOLVER_HOME;
 
 
-enum CRYPTIC_DEFAULT_SHEETS = [
+enum CRYPTIC_DEFAULT_DICTS = [
 	"computer": "https://github.com/cryptic-resolver/cryptic_computer.git",
 	"common":   "https://github.com/cryptic-resolver/cryptic_common.git",
 	"science":  "https://github.com/cryptic-resolver/cryptic_science.git",
@@ -33,7 +33,7 @@ enum CRYPTIC_DEFAULT_SHEETS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "1.1.2";
+enum CRYPTIC_VERSION = "2.0";
 
 
 //
@@ -78,12 +78,12 @@ bool is_there_any_sheet() {
 	// .array property must use import std.array
 	auto dirnum = dirEntries(path, SpanMode.shallow).array.length ;
 
-	// writeln(dirnum); // DEBUG 
+	// writeln(dirnum); // DEBUG
 	if (dirnum == 0)
 		return false;
-	else 
+	else
 		return true;
-	
+
 }
 
 unittest {
@@ -97,7 +97,7 @@ void add_default_sheet_if_none_exist() {
     if (!is_there_any_sheet()) {
 		writeln("cr: Adding default sheets...");
 
-		foreach(key, value; CRYPTIC_DEFAULT_SHEETS) {
+		foreach(key, value; CRYPTIC_DEFAULT_DICTS) {
 			writeln("cr: Pulling cryptic_" ~ key ~ "...");
 			auto gitcl = executeShell(
 				"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ value ~ " -q");
@@ -133,7 +133,7 @@ void update_sheets(string sheet_repo) {
 			if (gitcl.status != 0) writeln(gitcl.output);
 		}
 		writeln("cr: Update done");
-	
+
 	} else {
 		writeln("cr: Adding new sheet...");
 		auto gitcl = executeShell(
@@ -151,7 +151,7 @@ void update_sheets(string sheet_repo) {
 // file: dict(file) name, eg. a,b,c,d
 // dict: the concrete dict
 // 		 var dict map[string]interface{}
-// 
+//
 bool load_dictionary(string path, string file, TOMLDocument* doc) {
 
 	string toml_file = CRYPTIC_RESOLVER_HOME ~ format("/%s/%s.toml", path, file);
@@ -257,7 +257,7 @@ bool directly_lookup(string sheet, string file, string word) {
 	// Warn user this is the toml maintainer's fault
 	// the info map is empty
 	if (info == null) {
-		string str = "WARN: Synonym jumps to a wrong place at `%s` \n 
+		string str = "WARN: Synonym jumps to a wrong place at `%s` \n
 	Please consider fixing this in `%s.toml` of the sheet `%s`";
 
 		string redstr = red(format(str, word, toLower(file), sheet));
@@ -284,8 +284,6 @@ bool directly_lookup(string sheet, string file, string word) {
 //
 bool lookup(string sheet, string file, string word) {
 
-	// Only one meaning
-
 	import core.stdc.stdlib : exit;
 
 	TOMLDocument dict;
@@ -296,11 +294,8 @@ bool lookup(string sheet, string file, string word) {
 		return false;
 	}
 
-	//  We firstly want keys in toml be case-insenstive, but later in 2021/10/26 I found it caused problems.
-	// So I decide to add a new must-have format member: `disp`
-	// This will display the word in its traditional form.
+	// 'disp' will display the word in its traditional form.
 	// Then, all the keywords can be downcase.
-
 	TOMLValue info;
 
 	// check whether the key is in aa
@@ -308,10 +303,10 @@ bool lookup(string sheet, string file, string word) {
 	if (p is null){
 		return false;
 	} else {
-		info = dict[word]; // Directly hash it
+		info = dict[word];
 	}
 
-	// Warn user if the info is empty. For example:
+	// Warn if the info is empty. For example:
 	//   emacs = { }
 	if (info.table.keys.length == 0) {
 		string str = format("WARN: Lack of everything of the given word. \n
@@ -322,7 +317,7 @@ bool lookup(string sheet, string file, string word) {
 
 	// Check whether it's a synonym for anther word
 	// If yes, we should lookup into this sheet again, but maybe with a different file
-	
+
 	// writeln(info.table); //DEBUG
 
 	string same;
@@ -330,18 +325,18 @@ bool lookup(string sheet, string file, string word) {
 	if(p !is null){
 		same = info["same"].str;
 		pp_sheet(sheet);
-		// point out to user, this is a jump
+		// This is a jump
 		writeln(blue(bold(word)) ~ " redirects to " ~ blue(bold(same)));
 
 		// Explicitly convert it to downcase.
 		// In case the dictionary maintainer redirects to an uppercase word by mistake.
 		same = toLower(same);
-		
+
 		// no need to load dictionary again
 		if (toLower(word[0]) == same[0]) {	// same is just "a" "b" "c" "d" , etc ...
-			
+
 			TOMLValue same_info = dict[same];
-			
+
 			if (same_info == null) { // Need repair
 				string str = "WARN: Synonym jumps to the wrong place at `" ~ same ~ "`\n" ~
 					"	Please consider fixing this in " ~ same[0] ~
@@ -359,43 +354,60 @@ bool lookup(string sheet, string file, string word) {
 		}
 	}
 
-	// Check if it's only one meaning
-
+  // Single meaning with no category specifier
+  // We call this meaning as type 1
+  bool type_1_exist_flag = false;
 	p = "desc" in info;
 	if(p != null) {
 		pp_sheet(sheet);
 		pp_info(&info);
-		return true;
+		type_1_exist_flag = true;
 	}
 
-	// Multiple meanings in one sheet
-
-	string[] info_names;
-	foreach( k, v; info.table.keys) {	// yes, info is TOMLValue and can transformed to a table(aa)
-		info_names ~= v;
+  // Meanings with category specifier
+  // We call this meaning as type 2
+	string[] categories_raw;
+	foreach( k, v; info.table.keys) {	//  info is TOMLValue and can transformed to a table(aa)
+		categories_raw ~= v;
 	}
 
-	if (info_names.length != 0) {
-		pp_sheet(sheet);
+	string[] cryptic_keywords = ["disp", "desc", "full", "same", "see"];
+	string[] categories;
 
-		foreach(_, meaning; info_names) {
+	import std.algorithm: canFind;
+	foreach(_,v; categories_raw){
+		if( !cryptic_keywords.canFind(v) )
+			categories ~= v;
+	}
+
+	// DEBUG
+	writeln(categories);
+
+	if (categories.length != 0) {
+		if(type_1_exist_flag)
+      write(blue(bold("OR")), "\n");
+    else
+      pp_sheet(sheet);
+
+		foreach(_, meaning; categories) {
 			TOMLValue multi_ref = dict[word];
 			TOMLValue reference = multi_ref[meaning];
 			pp_info(&reference);
 			// last meaning doesn't show this separate line
-			if (info_names[info_names.length - 1] != meaning ){
+			if (categories[categories.length - 1] != meaning ){
 				write(blue(bold("OR")), "\n");
 			}
 		}
-
 		return true;
-
+	} else if(type_1_exist_flag){
+		return true;
 	} else {
 		return false;
 	}
 }
 
 
+//
 //  The main logic of `cr`
 //    1. Search the default's first sheet first
 //    2. Search the rest sheets in the cryptic sheets default dir
@@ -404,6 +416,7 @@ bool lookup(string sheet, string file, string word) {
 //  will print the info while finding. If `lookup` always return
 //  false then means lacking of this word in our sheets. So a wel-
 //  comed contribution is prinetd on the screen.
+//
 void solve_word(string word_2_solve){
 
 	add_default_sheet_if_none_exist();
@@ -422,19 +435,15 @@ void solve_word(string word_2_solve){
 	string first_sheet = "cryptic_computer";
 
 	// cache lookup results
-	// bool slice
 	bool[] results;
 	results ~= lookup(first_sheet, index, word);
-	// return if result == true # We should consider all sheets
 
-	// Then else
 	import std.file;
 	auto rest = dirEntries(CRYPTIC_RESOLVER_HOME, SpanMode.shallow);
 	foreach(file; rest){
 		string sheet = file.baseName;
 		if(sheet != first_sheet) {
 			results ~= lookup(sheet, index, word);
-			// continue if result == false # We should consider all sheets
 		}
 	}
 
@@ -451,11 +460,11 @@ void solve_word(string word_2_solve){
 			"You may use `cr -u` to update the sheets.\n" ~
 			"Or you could contribute to our sheets: Thanks!");
 
-		writefln("    1. computer:  %s", CRYPTIC_DEFAULT_SHEETS["computer"]);
-		writefln("    2. common:    %s", CRYPTIC_DEFAULT_SHEETS["common"]);
-		writefln("    3. science:	%s", CRYPTIC_DEFAULT_SHEETS["science"]);
-		writefln("    4. economy:   %s", CRYPTIC_DEFAULT_SHEETS["economy"]);
-		writefln("    5. medicine:  %s", CRYPTIC_DEFAULT_SHEETS["medicine"]);
+		writefln("    1. computer:  %s", CRYPTIC_DEFAULT_DICTS["computer"]);
+		writefln("    2. common:    %s", CRYPTIC_DEFAULT_DICTS["common"]);
+		writefln("    3. science:	%s",   CRYPTIC_DEFAULT_DICTS["science"]);
+		writefln("    4. economy:   %s", CRYPTIC_DEFAULT_DICTS["economy"]);
+		writefln("    5. medicine:  %s", CRYPTIC_DEFAULT_DICTS["medicine"]);
 		writeln();
 
 	} else {
@@ -466,24 +475,27 @@ void solve_word(string word_2_solve){
 
 
 // 'usage' should type with space!! not tab!!
-void help() 
+void help()
 {
     string help = "cr: Cryptic Resolver version %s in D
 
 usage:
-    cr -v                     => print version
-    cr -h                     => print this help
-    cr -u (xx.com//repo.git)  => update default sheet or add sheet from a git repo
-    cr emacs                  => Edit macros: a feature-rich editor";
-	
+    cr -v                  => Print version
+    cr -h                  => Print this help
+    cr -l                  => Print version
+    cr -u                  => Update all dictionaries
+    cr -a xx.com/repo.git  => Add a new dictionary
+    cr emacs               => Edit macros: a feature-rich editor
+		";
+
     writefln(help, CRYPTIC_VERSION);
 }
 
 
-void print_version() 
+void print_version()
 {
     string help = "cr: Cryptic Resolver version %s in D";
-	
+
     writefln(help, CRYPTIC_VERSION);
 }
 
@@ -496,8 +508,8 @@ void main(string[] args)
 		CRYPTIC_RESOLVER_HOME = `C:\Users\` ~ environment["USERNAME"] ~ `\.cryptic-resolver`;
 	} else {
 		CRYPTIC_RESOLVER_HOME = expandTilde("~/.cryptic-resolver");
-	}	
-	
+	}
+
 
 	string arg;
 	int arg_num = cast(int)args.length;	// ulong to int
