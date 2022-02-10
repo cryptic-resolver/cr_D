@@ -2,7 +2,7 @@
 //   File          : cr.d
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-1-9>
-//   Last modified : <2022-2-9>
+//   Last modified : <2022-2-10>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
