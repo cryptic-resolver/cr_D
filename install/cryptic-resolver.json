@@ -1,15 +1,15 @@
 {
-    "version": "1.1.2",
+    "version": "3.0",
     "description": "Cryptic-Resolver (cr) is a fast command line tool used to record and explain cryptic commands, acronyms and so forth in every field, including your own knowledge base.",
     "homepage": "https://github.com/cryptic-resolver/cr_D",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/cryptic-resolver/cr_D/releases/download/v1.1.2/cr-1.1.2-amd64-pc-windows.exe",
-            "hash": "FD0E62D74329CBCE7FB7506AF6B5190AEFACA91AE3CD3B0D3DB940AC97228100"
+            "url": "https://github.com/cryptic-resolver/cr_D/releases/download/v3.0/cr-3.0-amd64-pc-windows.exe",
+            "hash": "9D5D839171AA398F97FBED9522A3B9B6CC416F36BAA92CB2D29BE0A144D4108F"
         }
     },
-    "bin": [ ["cr-1.1.2-amd64-pc-windows.exe","cr"] ] ,
+    "bin": [ ["cr-3.0-amd64-pc-windows.exe","cr"] ] ,
     "checkver": "github",
     "autoupdate": {
         "architecture": {
