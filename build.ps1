@@ -2,13 +2,13 @@
 #   File          : build.ps1
 #   Authors       : ccmywish <ccmywish@qq.com>
 #   Created on    : <2022-1-11>
-#   Last modified : <2022-1-11>
+#   Last modified : <2022-2-10>
 #
 #   Build cr on Windows via PowerShell
 #   ---------------------------------------------------
 
 Write-Host "Building for Windows x64"
-dub build 
+dub build -b release
 
 $version = (Get-Content .\source\cr.d | Select-String "enum CRYPTIC_VERSION" ).
             ToString().
