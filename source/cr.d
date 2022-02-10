@@ -33,7 +33,7 @@ enum CRYPTIC_DEFAULT_DICTS = [
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"
 ];
 
-enum CRYPTIC_VERSION = "2.2";
+enum CRYPTIC_VERSION = "2.3";
 
 
 //
@@ -128,12 +128,29 @@ void update_dicts()
 }
 
 
-void add_dict(string repo){
+void add_dict(string repo)
+{
 	writeln("cr: Adding new dictionary...");
 	auto gitcl = executeShell(
 			"git -C " ~ CRYPTIC_RESOLVER_HOME ~ " clone " ~ repo ~ " -q");
 	if (gitcl.status != 0) writeln(gitcl.output);
 	writeln("cr: Add new dictionary done");
+}
+
+
+void del_dict(string repo)
+{
+  import std.file : rmdirRecurse;
+  auto file = CRYPTIC_RESOLVER_HOME ~ '/' ~ repo;
+  try {
+    // rmdir can't delete filled dir
+    rmdirRecurse(file);
+    writefln("cr: Delete dictionary %s done", bold(green(repo)));
+  } catch (Exception e) {
+    auto err = format("%s", e.message); // e.msg, e.file, e.line
+    writefln("%s", bold(red("cr: " ~ err)));
+    list_dictionaries;
+  }
 }
 
 
@@ -448,8 +465,8 @@ void solve_word(string word_2_solve)
 
 	if(result_flag != true) {
 		writeln("cr: Not found anything.\n\n" ~
-			"You may use `cr -u` to update the dictionaries.\n" ~
-			"Or you could contribute to: ");
+			"You may use `cr -u` to update all dictionaries.\n" ~
+			"Or you could contribute to: \n");
 
 		writefln("    1. computer:  %s", CRYPTIC_DEFAULT_DICTS["computer"]);
 		writefln("    2. common:    %s", CRYPTIC_DEFAULT_DICTS["common"]);
@@ -476,6 +493,7 @@ usage:
     cr -l                  => List local dictionaries
     cr -u                  => Update all dictionaries
     cr -a xx.com/repo.git  => Add a new dictionary
+    cr -d cryptic_xx       => Delete a dictionary
     cr emacs               => Edit macros: a feature-rich editor
 		";
 
@@ -544,7 +562,16 @@ void main(string[] args)
 	case "-a":
 		if (arg_num > 2) {
 			add_dict(args[2]);
-		}
+		} else {
+      writeln(bold(red("cr: Need an argument!")));
+    }
+		break;
+	case "-d":
+		if (arg_num > 2) {
+			del_dict(args[2]);
+		} else {
+      writeln(bold(red("cr: Need an argument!")));
+    }
 		break;
 	default:
 		solve_word(arg);
