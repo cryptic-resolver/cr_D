@@ -86,96 +86,13 @@ $ cr -h
 
 <br>
 
-# Implementation
+## Implementation
 
 `cr` is written in pure **D**. You can implement this tool in any other language you like(name your projects as `cr_Python` for example), just remember to reuse our [cryptic_computer] or other dictionaries which are the core parts anyone can contribute to.
 
-## Dictionary layout
-
-`Dictionary` is a knowledgebase. Every dictionary should be a `git` repository, and each consists of many files(we call these `sheets`):
-```
-Dictionary
-.
-├── 0123456789.toml
-├── a.toml
-├── b.toml
-├── c.toml
-├── ...
-├── y.toml
-└── z.toml
-
-```
-
-## Sheet format(File format)
-
-In every file(or sheet), your definition format looks like this in pure **toml**:
-```toml
-# A normal definition
-#
-# NOTICE: 
-#   We MUST keep the key downcase
-#   We use a key 'disp' to display its original form 
-#   Because the case sometimes contains details to help we understand
-#
-#   And 'disp' && 'desc' is both MUST-HAVE. 
-#   But if you use 'same', all other infos are not needed.   
-#
-[xdg]
-disp = "XDG"
-desc = "Cross Desktop Group"
-
-# If you want to explain more, use 'full'
-[xxd]
-disp = "xxd"
-desc = "hex file dump"
-full = "Why call this 'xxd' rather than 'xd'?? Maybe a historical reason"
-
-# You can add a subkey as a category specifier to differ
-[xdm.Download]
-disp = "XDM"
-desc = "eXtreme Download Manager"
-
-[xdm.Display]
-disp = "XDM"
-desc = "X Display Manager"
-```
-
-More features:
-```toml
-[jpeg]
-disp = "JPEG"
-desc = "Joint Photographic Experts Group"
-full = "Introduced in 1992. A commonly used method of lossy compression for digital images"
-see = ['MPG','PNG'] # This is a `see also`
-
-[jpg]
-same = "JPEG" # We just need to redirect this. No duplicate!
-
-[sth]
-same = "xdm" # If we direct to a multimeaning word, we don't need to specify its category(subkey).
-
-["h.265"]
-disp = "H.265"
-desc = "A video compression standard" # The 'dot' keyword supported using quoted strings
-
-```
-
-## Name collision
-
-In one sheet, you should consider adding a subkey to differ each other like the example above.
-
-*But what if a dictionary has 'gdm' while another also has a 'GDM'?*
-
-> cr can handle this.
-
-*But what if a sheet has two 'gdm'?* 
-
-> This will lead to toml's parser library fail. You have these solutions
-> 1. Use a better lint for example: [VSCode's Even Better TOML](https://github.com/tamasfe/taplo)
-> 2. Watch the fail message, you may notice 'override path xxx', the xxx is the collision, you may correct it back manually.
+For dictionary and sheet layout, you can always refer to [cr] in Ruby, the reference implementation.
 
 
-<br>
 
 ## cr in D development
 
@@ -201,6 +118,7 @@ maybe you need `sudo` access
 Official [default sheets](#default-sheets) are all under CC-BY-4.0
 
 
+[cr]: https://github.com/cryptic-resolver/cr
 [cryptic_computer]: https://github.com/cryptic-resolver/cryptic_computer
 [cryptic_common]: https://github.com/cryptic-resolver/cryptic_common
 [cryptic_science]: https://github.com/cryptic-resolver/cryptic_science
