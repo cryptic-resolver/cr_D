@@ -6,6 +6,8 @@
 
 </div>
 
+**NOTE: I'm no longer maintaining this D version cr, because it's a very trivial work to implement a tool with different languages same time myself. Every time on an update in Cr in Ruby, I'll move the new functions here in D or Go. Extremely fussy work must be done to transpile a dynamic programming way to a strict and stiff way. Although I prefer D very much, I feel exhausted switching between languages. If you are interested in it, you can fork it.**
+
 This command line tool `cr` is used to **record and explain cryptic commands, acronyms and so forth** in daily life.
 The effort is to study etymology and know of naming conventions.
 
